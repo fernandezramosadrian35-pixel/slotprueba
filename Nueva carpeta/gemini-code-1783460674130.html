@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎰 Fonsi's Treasure (Versión Dibujo) 🎰</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Uncial+Antiqua&display=swap');
+        .font-pirate { font-family: 'Uncial Antiqua', serif; }
+        
+        .slot-machine-container {
+            background-image: url('dibujo_fondo.png'); /* Usar la nueva imagen ilustrada */
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            aspect-ratio: 1024 / 768; /* Proporción de la nueva imagen */
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .blur-spinning {
+            animation: blurText 0.1s infinite linear;
+            filter: blur(5px);
+            opacity: 0.7;
+        }
+        @keyframes blurText {
+            0% { transform: translateY(-10px); }
+            100% { transform: translateY(10px); }
+        }
+    </style>
+</head>
+<body class="bg-amber-950 text-white font-sans min-h-screen flex flex-col items-center justify-center p-2 selection:bg-amber-600">
+
+    <div class="w-full max-w-xl flex flex-col items-center gap-3">
+        <h1 class="font-pirate text-3xl text-amber-300 tracking-wider">EL TESORO DEL PEÑISTA</h1>
+
+        <div class="slot-machine-container w-full relative shadow-[0_0_20px_rgba(217,119,6,0.4)]">
+            
+            <div class="absolute bottom-[10%] left-[18%] w-[64%] h-[27%] grid grid-cols-3 gap-[2%] px-[1%] items-center justify-items-center overflow-hidden">
+                
+                <div class="w-full h-full bg-stone-900/60 backdrop-blur-sm rounded flex items-center justify-center border border-amber-800/50">
+                    <div id="reel1" class="text-5xl md:text-6xl text-amber-200">⚔️</div>
+                </div>
+                
+                <div class="w-full h-full bg-stone-900/60 backdrop-blur-sm rounded flex items-center justify-center border border-amber-800/50">
+                    <div id="reel2" class="text-5xl md:text-6xl text-amber-200">💰</div>
+                </div>
+                
+                <div class="w-full h-full bg-stone-900/60 backdrop-blur-sm rounded flex items-center justify-center border border-amber-800/50">
+                    <div id="reel3" class="text-5xl md:text-6xl text-amber-200">☠️</div>
+                </div>
+
+            </div>
+        </div>
+
+        <div id="result-display" class="w-full bg-stone-900/80 border-2 border-amber-700/60 rounded-xl p-3 text-center min-h-14 flex items-center justify-center">
+            <p class="text-amber-200 font-bold text-sm">🏴‍☠️ ¡A ver qué te depara Fonsi! 🏴‍☠️</p>
+        </div>
+
+        <button id="spin-btn" class="w-full bg-amber-700 hover:bg-amber-600 font-pirate text-xl py-3 rounded-xl border-b-4 border-amber-900 text-stone-950 tracking-wide">
+            GIRAR EL TIMÓN
+        </button>
+
+    </div>
+
+    <script>
+        // Símbolos de estilo dibujo (Unicode/ASCII art que combine bien)
+        const items = ['⚔️', '☠️', '⚓', '🦜', '🗺️', '💰'];
+        
+        const rewards = {
+            '⚔️': '¡CHUPITO DE JÄGER! Combate en barra.',
+            '☠️': 'POZO: Te toca AGUA marinero.',
+            '⚓': '¡Cerveza ANCLADA! Una bien fría.',
+            '🦜': '¡CUBATAZO! Pide tu copazo.',
+            '🗺️': '¡MAPA DEL TESORO! Botella de Jäger.',
+            '💰': '¡COFRE DE ORO! Mandas un chupito.'
+        };
+
+        const winPhrases = ["¡VAYA SUERTE!", "¡HOY CORRE EL JÄGER!", "¡AL ABORDAJE!"];
+        const losePhrases = ["Casi... ¡La barra te llama!", "Inténtalo de nuevo.", "El tesoro se resiste."];
+
+        const spinBtn = document.getElementById('spin-btn');
+        const display = document.getElementById('result-display');
+        const reels = [document.getElementById('reel1'), document.getElementById('reel2'), document.getElementById('reel3')];
+
+        let isSpinning = false;
+
+        spinBtn.addEventListener('click', () => {
+            if (isSpinning) return;
+            isSpinning = true;
+            spinBtn.disabled = true;
+            spinBtn.innerText = 'GIRANDO...';
+            spinBtn.style.borderBottomWidth = '1px';
+
+            display.innerHTML = '<p class="text-yellow-300 font-pirate animate-pulse">¡Mucha Suerte!</p>';
+
+            reels.forEach(reel => reel.classList.add('blur-spinning'));
+
+            setTimeout(() => {
+                stopReel(0);
+                setTimeout(() => {
+                    stopReel(1);
+                    setTimeout(() => {
+                        const final = stopReel(2);
+                        checkResult(final[0], final[1], final[2]);
+                    }, 400);
+                }, 400);
+            }, 900);
+        });
+
+        function stopReel(index) {
+            const reel = reels[index];
+            reel.classList.remove('blur-spinning');
+            const finalEmoji = items[Math.floor(Math.random() * items.length)];
+            reel.textContent = finalEmoji;
+            
+            reel.style.transform = 'scale(1.1)';
+            setTimeout(() => reel.style.transform = 'scale(1)', 100);
+            
+            return [reels[0].textContent, reels[1].textContent, reels[2].textContent];
+        }
+
+        function checkResult(r1, r2, r3) {
+            spinBtn.disabled = false;
+            spinBtn.innerText = 'GIRAR EL TIMÓN';
+            spinBtn.style.borderBottomWidth = '4px';
+            isSpinning = false;
+
+            if (r1 === r2 && r2 === r3) {
+                // Confeti de colores fiesteros
+                confetti({ particleCount: 150, spread: 70, origin: { y: 0.7 } });
+                display.innerHTML = `
+                    <div class="text-center">
+                        <p class="font-pirate text-amber-300 text-base mb-1">${winPhrases[Math.floor(Math.random() * winPhrases.length)]}</p>
+                        <p class="text-emerald-400 font-bold text-sm md:text-base">${rewards[r1]}</p>
+                    </div>
+                `;
+            } else {
+                display.innerHTML = `
+                    <p class="text-stone-400 italic text-sm">${losePhrases[Math.floor(Math.random() * losePhrases.length)]}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
